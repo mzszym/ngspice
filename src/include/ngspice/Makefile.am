@@ -123,6 +123,7 @@ include_HEADERS = \
 	FastNorm3.h	\
 	fftext.h	\
 	wallace.h	\
-	wstdio.h
+	wstdio.h	\
+	relandefs.h
 
 MAINTAINERCLEANFILES = Makefile.in

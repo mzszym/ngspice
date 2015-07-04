@@ -10,7 +10,7 @@ Modified: 2000  AlansFixes
 #include "ngspice/ngspice.h"
 #include "ngspice/cktdefs.h"
 #include "cktaccept.h"
-#include "ngspice/trandefs.h"
+#include "ngspice/relandefs.h"
 #include "ngspice/sperror.h"
 #include "ngspice/fteext.h"
 #include "ngspice/missing_math.h"
@@ -64,10 +64,10 @@ do { \
 
 
 int
-DCtran(CKTcircuit *ckt,
+RELANanalysis (CKTcircuit *ckt,
        int restart)   /* forced restart flag */
 {
-    TRANan *job = (TRANan *) ckt->CKTcurJob;
+    RELANan *job = (RELANan *) ckt->CKTcurJob;
 
     int i;
     double olddelta;
@@ -169,7 +169,7 @@ DCtran(CKTcircuit *ckt,
                                            ckt->CKTcurJob->JOBname,
                                            timeUid, IF_REAL,
                                            numNames, nameList, IF_REAL,
-                                           &(job->TRANplot));
+                                           &(job->RELANplot));
         tfree(nameList);
         if(error) return(error);
 
@@ -282,7 +282,7 @@ DCtran(CKTcircuit *ckt,
         /* Send the operating point results for Mspice compatibility */
         if(g_ipc.enabled) {
             ipc_send_dcop_prefix();
-            CKTdump(ckt, 0.0, job->TRANplot);
+            CKTdump(ckt, 0.0, job->RELANplot);
             ipc_send_dcop_suffix();
         }
 
@@ -367,7 +367,7 @@ DCtran(CKTcircuit *ckt,
                                            NULL,
                                            NULL, 0,
                                            666, NULL, 666,
-                                           &(job->TRANplot));
+                                           &(job->RELANplot));
         if(error) {
             fprintf(stderr, "Couldn't relink rawfile\n");
             return error;
@@ -456,7 +456,7 @@ DCtran(CKTcircuit *ckt,
             ipc_firsttime || ipc_secondtime || ipc_delta_cut ) {
 
             ipc_send_data_prefix(ckt->CKTtime);
-            CKTdump(ckt, ckt->CKTtime, job->TRANplot);
+            CKTdump(ckt, ckt->CKTtime, job->RELANplot);
             ipc_send_data_suffix();
 
             if(ipc_firsttime) {
@@ -475,7 +475,7 @@ DCtran(CKTcircuit *ckt,
         CLUoutput(ckt);
 #endif
         if(ckt->CKTtime >= ckt->CKTinitTime)
-            CKTdump(ckt, ckt->CKTtime, job->TRANplot);
+            CKTdump(ckt, ckt->CKTtime, job->RELANplot);
 #ifdef XSPICE
 /* gtri - begin - wbk - Update event queues/data for accepted timepoint */
     /* Note: this must be done AFTER sending results to SI so it can't */
@@ -492,8 +492,8 @@ DCtran(CKTcircuit *ckt,
         printf(" done:  time is %g, final time is %g, and tol is %g\n",
         ckt->CKTtime, ckt->CKTfinalTime, ckt->CKTminBreak);
 #endif
-        SPfrontEnd->OUTendPlot (job->TRANplot);
-        job->TRANplot = NULL;
+        SPfrontEnd->OUTendPlot (job->RELANplot);
+        job->RELANplot = NULL;
         UPDATE_STATS(0);
 #ifdef WANT_SENSE2
         if(ckt->CKTsenInfo && (ckt->CKTsenInfo->SENmode & TRANSEN)){
@@ -828,6 +828,16 @@ resume:
 #endif
 
         } else {
+
+/** Nel RHSold, ogni device deve accedere ai propri valori per vedere se esso stesso è acceso o spento.
+    Nel caso del BSIM4, vale la regola Vgs > Vth, dove Vgs = ckt->CKTrhsOld [here->BSIM4...] - ckt->CKTrhsOld [here->BSIM4...] e Vth = here->BSIM4vth .
+    In caso il transistor sia acceso, si alza un flag, privato del device, che indica che è acceso. Se è spento, lo stesso flag sarà basso.
+    Il tempo corrente CKTtime deve essere memorizzato insieme, in modo tale da poter poi calcolare il delta di tempo necessario al modello.
+    QUI, deve essere controllato che all'istante precedente il device sia acceso (o spento). Se si manifesta un cambio, allora la fase di stress (o di recovery)
+      è finita e bisogna calcolare il delta_vth attraverso il modello.
+*/
+            CKTreliability (ckt, 0) ;
+
             if (firsttime) {
 #ifdef WANT_SENSE2
                 if(ckt->CKTsenInfo && (ckt->CKTsenInfo->SENmode & TRANSEN)){
