@@ -68,7 +68,7 @@ ft_sigintr_cleanup(void)
     cp_resetcontrol();
 }
 
-
+unsigned int interrupt_counter ;
 /*  invoke this function upon keyboard interrupt  */
 RETSIGTYPE
 ft_sigintr(void)
@@ -80,9 +80,17 @@ ft_sigintr(void)
 
     if (ft_intrpt) {    /* check to see if we're being interrupted repeatedly */
         fprintf(cp_err, "\nInterrupted again (ouch)\n");
+        interrupt_counter++ ;
     } else {
         fprintf(cp_err, "\nInterrupted once . . .\n");
         ft_intrpt = TRUE;
+        interrupt_counter = 1 ;
+    }
+
+    if (interrupt_counter == 3)
+    {
+        fprintf(cp_err, "\nKilling, since %d interrupts have been requested\n\n", interrupt_counter);
+        exit (1) ;
     }
 
     if (ft_setflag) {
