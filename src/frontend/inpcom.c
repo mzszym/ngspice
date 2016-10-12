@@ -3598,6 +3598,22 @@ get_number_terminals(char *c)
         }
         return i-2;
         break;
+#ifdef NDEV
+    case 'n':
+      /* Will this work for more than 2 terminals? --mzszym */
+        i = 0;
+        /* find the last token in the line*/
+        while ((i < 100) && (*c != '\0')) {
+            char *tmp_inst = gettok_instance(&c);
+            strncpy(nam_buf, tmp_inst, sizeof(nam_buf)-1);
+            tfree(tmp_inst);
+            i++;
+        }
+        if (i == 100)
+            return 0;
+        return i-2;
+        break;
+#endif
     case 'p': /* recognition of up to 100 cpl nodes */
         i = j = 0;
         /* find the last token in the line*/
