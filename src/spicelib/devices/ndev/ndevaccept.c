@@ -14,7 +14,6 @@ Author: 1987 Thomas L. Quarles
 #include "ngspice/suffix.h"
 
 
-
 int NDEVaccept(CKTcircuit *ckt, GENmodel *inModel)
 {
   NDEVmodel *model = (NDEVmodel *)inModel;
@@ -53,7 +52,8 @@ int NDEVconvTest(GENmodel *inModel, CKTcircuit *ckt)
              */
 	   here->CKTInfo.DEV_CALL = NDEV_CONVERGINCE_TEST; 
 	   send(model->sock,&here->CKTInfo,sizeof(sCKTinfo),0); 
-	   recv(model->sock,&here->CKTInfo,sizeof(sCKTinfo),MSG_WAITALL);
+	   if(recv(model->sock,&here->CKTInfo,sizeof(sCKTinfo),MSG_WAITALL) != sizeof(sCKTinfo))
+	        NDEVfail("invalid response in NDEVconvTest");
    
             if (here->CKTInfo.convergence_flag<0) {
 	        /* no reason to continue - we've failed... */

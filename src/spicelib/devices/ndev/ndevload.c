@@ -59,7 +59,8 @@ NDEVload(GENmodel * inModel, CKTcircuit * ckt)
              /* reveive terminal current and conductional matrix from device simulator */
 	     for(i=0;i<here->term;i++)  
 	     {
-	       recv(model->sock,&here->PINinfos[i],sizeof(here->PINinfos[i]),MSG_WAITALL);
+	       if(recv(model->sock,&here->PINinfos[i],sizeof(here->PINinfos[i]),MSG_WAITALL) != sizeof(here->PINinfos[i]))
+		 NDEVfail("invalid response received in NDEVload");
 	       *(ckt->CKTrhs+here->pin[i]) += here->PINinfos[i].I;
 	       for(j=0;j<here->term;j++) 
 	         *(here->mat_pointer[i*here->term+j]) += here->PINinfos[i].dI_dV[j];

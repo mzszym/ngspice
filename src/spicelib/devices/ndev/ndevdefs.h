@@ -73,5 +73,6 @@ typedef struct sNDEVmodel {	/* model structure for a diode */
 
 #include "ndevext.h"
 
+#define NDEVfail(msg) do { fprintf(stderr,msg); fprintf(stderr, "\nAborting.\n"); abort(); return E_PRIVATE; } while(1)
 
 #endif				/* NDEV_H */
